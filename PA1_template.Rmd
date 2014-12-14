@@ -2,15 +2,15 @@
 title: 'Reproducible Research: Peer Assessment 1'
 author: "William L. Kennedy"
 output:
-  pdf_document: default
   html_document:
     keep_md: yes
+  pdf_document: default
 ---
 
 
 ## Loading and preprocessing the data
 
-```{r}
+```{r setoptions, echo=TRUE}
 # Package dependencies (uncomment and install if necessary)
 
 # install.packages("data.table")

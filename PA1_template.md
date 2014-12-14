@@ -10,6 +10,7 @@ William L. Kennedy
 
 # install.packages("data.table")
 # install.packages("lubridate")
+# install.packages("lattice")
 library(data.table)
 library(lubridate)
 ```
@@ -24,6 +25,8 @@ library(lubridate)
 ```
 
 ```r
+library(lattice)
+
 # set the working directory (replace path accordingly)
 setwd("/Users/adakemia/Documents/Academic/Coursera/DataScienceSpecialization/05ReproducibleResearch/Projects/RepData_PeerAssessment1")
 
@@ -46,7 +49,7 @@ if (!file.exists(file)) {
 
 # Read files into data.table object
 data <- fread(file, sep=",", stringsAsFactors=F, header=T, 
-              na.strings="NA", colClasses=c("numeric","character","character"))
+              na.strings="NA", colClasses=c("numeric","character","numeric"))
 # Check structure of data
 str(data)
 ```
@@ -55,7 +58,7 @@ str(data)
 ## Classes 'data.table' and 'data.frame':	17568 obs. of  3 variables:
 ##  $ steps   : num  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ date    : chr  "2012-10-01" "2012-10-01" "2012-10-01" "2012-10-01" ...
-##  $ interval: chr  "0" "5" "10" "15" ...
+##  $ interval: num  0 5 10 15 20 25 30 35 40 45 ...
 ##  - attr(*, ".internal.selfref")=<externalptr>
 ```
 
@@ -84,6 +87,7 @@ data[,date := ymd(date)]
 ```r
 # Data quality checks
 
+
 # Check for missingness
 colSums(is.na(data))
 ```
@@ -100,6 +104,14 @@ sum(is.na(data$steps)) / nrow(data) * 100
 
 ```
 ## [1] 13.11475
+```
+
+```r
+# after trying several fixes to the skip in the interval time entry
+# I decided to leave it. I don't see a noticeable difference in output
+# and several methods introduced anomalies I couldn't fix in the time 
+# alotted. Given more time I would convert to a timeseries object (e.g.,
+# ts, zoo, TimeSeries, etc. for more complete analyses) 
 ```
 
 
@@ -136,17 +148,24 @@ data[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
 
 ## What is the average daily activity pattern?  
   
-So what does a typical day look like for this individual? First, we can create a time series based on the mean for each time interval across all days.   
+So what does a typical day look like for this individual? First, we can create a time series based on the mean for each time interval across all days. By plotting this timeseries, we can see qualitatively what a typical day looks like.   
+
+In this case, we see that activity begins around 5 am, there is, on average, a large spike in activity in the morning around 8:30 am followed by spikes around noon, mid-afternoon, and then early evening perhaps corresponding to morning exercise, lunch, afternoon break, and returning home. It might be interesting to compare weekend and weekday patterns. And that is what we show below in the last section.  
+
 
 
 ```r
 ts <- data[, .(mean = round( mean(steps, na.rm=T), 2)), by=interval]
 
 plot(ts$mean ~ ts$interval, type="l", main="Mean Steps Per Daily Interval",
-     xlab="interval", ylab="mean steps")
+     xlab="interval (0 [12 am] - 2355 [11:55 pm])", ylab="mean steps")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+  
+Now we can look at specific descriptives like the interval with the average maximum number of steps. As expected from the time series plot, it is 8:35 am.  
+
+
 
 ```r
 ts[which.max(mean)]
@@ -156,96 +175,55 @@ ts[which.max(mean)]
 ##    interval   mean
 ## 1:      835 206.17
 ```
-## Imputing missing values
+## Imputing missing values  
+  
+Imputing missing values is a tricky but important task. Using listwise deletion is known to be more biased than other methods (add citation). On the other hand, more complex methods will be less biased than replacing with means or medians. For this exercise, the task seems to be an exercise in looking at and thinking about the data and less about using tools for missing data. Based on this thinking, and based on the output below, it seemed using the median might be best. After trying each though, the mean may be the less biased choice. I need to look into this further. So in the end, I am using the mean to impute the missing values. Both are shown below.  
+
+
 
 
 ```r
-# create a second imputed data set
-data_imp <- data
-
-ts2 <- data_imp[, .(median = median(steps, na.rm=T),
+# Compare mean and median by interval 
+ts2 <- data[, .(median = median(steps, na.rm=T),
                     mean = mean(steps, na.rm=T)), 
                 by=interval]
-# Compare mean and median by interval 
+
 plot(ts2$mean ~ ts2$interval, type="l", main="Mean Steps Per Daily Interval",
      xlab="interval", ylab="mean steps")
 lines(ts2$median ~ ts2$interval, col="red")
+legend("topright",legend=c("mean","median"),lty=1, col=c("black", "red"))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
 
 ```r
-data[interval == 1000]
+# Where median shows zero, "random"" sample of percentage of zero days
+nrow(data[interval == 1000][steps == 0])/nrow(data[!is.na(steps) & interval == 1000])
 ```
 
 ```
-##     steps       date interval
-##  1:    NA 2012-10-01     1000
-##  2:     0 2012-10-02     1000
-##  3:     0 2012-10-03     1000
-##  4:     0 2012-10-04     1000
-##  5:     0 2012-10-05     1000
-##  6:    16 2012-10-06     1000
-##  7:   281 2012-10-07     1000
-##  8:    NA 2012-10-08     1000
-##  9:    23 2012-10-09     1000
-## 10:   400 2012-10-10     1000
-## 11:     0 2012-10-11     1000
-## 12:     0 2012-10-12     1000
-## 13:     0 2012-10-13     1000
-## 14:   392 2012-10-14     1000
-## 15:     0 2012-10-15     1000
-## 16:     0 2012-10-16     1000
-## 17:    92 2012-10-17     1000
-## 18:     0 2012-10-18     1000
-## 19:     0 2012-10-19     1000
-## 20:     0 2012-10-20     1000
-## 21:     0 2012-10-21     1000
-## 22:     0 2012-10-22     1000
-## 23:     0 2012-10-23     1000
-## 24:     0 2012-10-24     1000
-## 25:     0 2012-10-25     1000
-## 26:     0 2012-10-26     1000
-## 27:     0 2012-10-27     1000
-## 28:     0 2012-10-28     1000
-## 29:   104 2012-10-29     1000
-## 30:     0 2012-10-30     1000
-## 31:   122 2012-10-31     1000
-## 32:    NA 2012-11-01     1000
-## 33:   487 2012-11-02     1000
-## 34:     0 2012-11-03     1000
-## 35:    NA 2012-11-04     1000
-## 36:     0 2012-11-05     1000
-## 37:     0 2012-11-06     1000
-## 38:     8 2012-11-07     1000
-## 39:     0 2012-11-08     1000
-## 40:    NA 2012-11-09     1000
-## 41:    NA 2012-11-10     1000
-## 42:     0 2012-11-11     1000
-## 43:     0 2012-11-12     1000
-## 44:     0 2012-11-13     1000
-## 45:    NA 2012-11-14     1000
-## 46:     0 2012-11-15     1000
-## 47:    18 2012-11-16     1000
-## 48:     0 2012-11-17     1000
-## 49:     0 2012-11-18     1000
-## 50:     0 2012-11-19     1000
-## 51:     0 2012-11-20     1000
-## 52:     0 2012-11-21     1000
-## 53:     0 2012-11-22     1000
-## 54:     0 2012-11-23     1000
-## 55:     0 2012-11-24     1000
-## 56:     0 2012-11-25     1000
-## 57:     0 2012-11-26     1000
-## 58:   207 2012-11-27     1000
-## 59:     0 2012-11-28     1000
-## 60:     0 2012-11-29     1000
-## 61:    NA 2012-11-30     1000
-##     steps       date interval
+## [1] 0.7735849
 ```
 
 ```r
-data_imp[, .(median = median(steps, na.rm=T),
+nrow(data[interval == 1500][steps == 0])/nrow(data[!is.na(steps) & interval == 1500])
+```
+
+```
+## [1] 0.7735849
+```
+
+```r
+nrow(data[interval == 2000][steps == 0])/nrow(data[!is.na(steps) & interval == 2000])
+```
+
+```
+## [1] 0.7169811
+```
+
+```r
+# Compare interval by weekday
+data[, .(median = median(steps, na.rm=T),
                     mean = mean(steps, na.rm=T)), 
                 by=list(interval, wday(date))][interval==900]
 ```
@@ -271,73 +249,157 @@ ts2[interval == 900]
 ```
 
 ```r
-data[interval == 900]
+nrow(data[interval == 900][steps == 0])/nrow(data[!is.na(steps) & interval == 900])
 ```
 
 ```
-##     steps       date interval
-##  1:    NA 2012-10-01      900
-##  2:     0 2012-10-02      900
-##  3:     0 2012-10-03      900
-##  4:     0 2012-10-04      900
-##  5:   530 2012-10-05      900
-##  6:    30 2012-10-06      900
-##  7:    23 2012-10-07      900
-##  8:    NA 2012-10-08      900
-##  9:   134 2012-10-09      900
-## 10:   135 2012-10-10      900
-## 11:   548 2012-10-11      900
-## 12:   802 2012-10-12      900
-## 13:    18 2012-10-13      900
-## 14:    15 2012-10-14      900
-## 15:   732 2012-10-15      900
-## 16:    36 2012-10-16      900
-## 17:   668 2012-10-17      900
-## 18:    55 2012-10-18      900
-## 19:    15 2012-10-19      900
-## 20:     0 2012-10-20      900
-## 21:     0 2012-10-21      900
-## 22:    71 2012-10-22      900
-## 23:   400 2012-10-23      900
-## 24:     0 2012-10-24      900
-## 25:     0 2012-10-25      900
-## 26:   164 2012-10-26      900
-## 27:   519 2012-10-27      900
-## 28:    23 2012-10-28      900
-## 29:     4 2012-10-29      900
-## 30:     0 2012-10-30      900
-## 31:     0 2012-10-31      900
-## 32:    NA 2012-11-01      900
-## 33:    16 2012-11-02      900
-## 34:   198 2012-11-03      900
-## 35:    NA 2012-11-04      900
-## 36:   363 2012-11-05      900
-## 37:   433 2012-11-06      900
-## 38:    28 2012-11-07      900
-## 39:     0 2012-11-08      900
-## 40:    NA 2012-11-09      900
-## 41:    NA 2012-11-10      900
-## 42:     0 2012-11-11      900
-## 43:   539 2012-11-12      900
-## 44:     0 2012-11-13      900
-## 45:    NA 2012-11-14      900
-## 46:     0 2012-11-15      900
-## 47:     0 2012-11-16      900
-## 48:    20 2012-11-17      900
-## 49:    11 2012-11-18      900
-## 50:     0 2012-11-19      900
-## 51:   203 2012-11-20      900
-## 52:   269 2012-11-21      900
-## 53:   499 2012-11-22      900
-## 54:     0 2012-11-23      900
-## 55:     0 2012-11-24      900
-## 56:    62 2012-11-25      900
-## 57:    40 2012-11-26      900
-## 58:     0 2012-11-27      900
-## 59:     0 2012-11-28      900
-## 60:     0 2012-11-29      900
-## 61:    NA 2012-11-30      900
-##     steps       date interval
+## [1] 0.3773585
 ```
 
-## Are there differences in activity patterns between weekdays and weekends?
+```r
+# Based on numbers, median might be safer/less biased than mean (but ideally
+# would check)
+# (of course MI or FIML would be best)
+# Could consider making exceptions for days where percentage of zeroes 
+# is significantly lower than 50%, etc. but not this time....
+
+
+#setkey(ts2, interval)
+#setkey(data, interval)
+
+data_imp <- merge(data, ts2, by="interval", all=T)
+data_imp[is.na(steps),steps := median]
+```
+
+```
+##        interval steps       date median     mean
+##     1:        0     0 2012-10-01      0 1.716981
+##     2:        0     0 2012-10-02      0 1.716981
+##     3:        0     0 2012-10-03      0 1.716981
+##     4:        0    47 2012-10-04      0 1.716981
+##     5:        0     0 2012-10-05      0 1.716981
+##    ---                                          
+## 17564:     2355     0 2012-11-26      0 1.075472
+## 17565:     2355     0 2012-11-27      0 1.075472
+## 17566:     2355     0 2012-11-28      0 1.075472
+## 17567:     2355     0 2012-11-29      0 1.075472
+## 17568:     2355     0 2012-11-30      0 1.075472
+```
+
+```r
+hist(data_imp[,sum(steps), by=date]$V1, breaks=8, 
+     main="Histogram of Mean Steps Per Day",
+     xlab="mean steps per day")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-6-2.png) 
+
+```r
+data_imp[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
+                                        mean = mean(sum, na.rm=T))]
+```
+
+```
+##    median     mean
+## 1:  10395 9503.869
+```
+
+```r
+# Looks a little "funny", not sure this is OK. Let's try mean.
+data_imp_mean <- merge(data, ts2, by="interval", all=T)
+data_imp_mean[is.na(steps),steps := mean]
+```
+
+```
+##        interval     steps       date median     mean
+##     1:        0  1.716981 2012-10-01      0 1.716981
+##     2:        0  0.000000 2012-10-02      0 1.716981
+##     3:        0  0.000000 2012-10-03      0 1.716981
+##     4:        0 47.000000 2012-10-04      0 1.716981
+##     5:        0  0.000000 2012-10-05      0 1.716981
+##    ---                                              
+## 17564:     2355  0.000000 2012-11-26      0 1.075472
+## 17565:     2355  0.000000 2012-11-27      0 1.075472
+## 17566:     2355  0.000000 2012-11-28      0 1.075472
+## 17567:     2355  0.000000 2012-11-29      0 1.075472
+## 17568:     2355  1.075472 2012-11-30      0 1.075472
+```
+
+```r
+hist(data_imp_mean[,sum(steps), by=date]$V1, breaks=8, 
+     main="Histogram of Mean Steps Per Day",
+     xlab="mean steps per day")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-6-3.png) 
+
+```r
+data_imp_mean[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
+                                        mean = mean(sum, na.rm=T))]
+```
+
+```
+##      median     mean
+## 1: 10766.19 10766.19
+```
+
+```r
+data_imp_mean[which.max(interval)]
+```
+
+```
+##    interval    steps       date median     mean
+## 1:     2355 1.075472 2012-10-01      0 1.075472
+```
+
+## Are there differences in activity patterns between weekdays and weekends?  
+  
+Differences between weekday and weekend activity as shown in the plot below include a slower rise in activity on weekend mornings, as well as higher activity variability throughout the day and evening.  
+
+
+
+```r
+# add weekday factor
+data_imp_mean[, weekday := ifelse(wday(date) %in% c(2:6),"weekday","weekend")]
+```
+
+```
+##        interval     steps       date median     mean weekday
+##     1:        0  1.716981 2012-10-01      0 1.716981 weekday
+##     2:        0  0.000000 2012-10-02      0 1.716981 weekday
+##     3:        0  0.000000 2012-10-03      0 1.716981 weekday
+##     4:        0 47.000000 2012-10-04      0 1.716981 weekday
+##     5:        0  0.000000 2012-10-05      0 1.716981 weekday
+##    ---                                                      
+## 17564:     2355  0.000000 2012-11-26      0 1.075472 weekday
+## 17565:     2355  0.000000 2012-11-27      0 1.075472 weekday
+## 17566:     2355  0.000000 2012-11-28      0 1.075472 weekday
+## 17567:     2355  0.000000 2012-11-29      0 1.075472 weekday
+## 17568:     2355  1.075472 2012-11-30      0 1.075472 weekday
+```
+
+```r
+nrow(data_imp_mean[weekday == "weekday"])
+```
+
+```
+## [1] 12960
+```
+
+```r
+ts_imp_mean <- data_imp_mean[, .(median = median(steps),
+                    mean = mean(steps),
+                    weekday),
+                by=list(weekday,interval)]
+
+
+xyplot(data=ts_imp_mean,
+       mean ~ interval | factor(weekday), 
+       type="l",
+       layout=c(1,2))
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
+
+
+

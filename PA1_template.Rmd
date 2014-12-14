@@ -1,25 +1,124 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
+title: 'Reproducible Research: Peer Assessment 1'
+author: William L. Kennedy
+output:
   html_document:
-    keep_md: true
+    keep_md: yes
+  pdf_document: default
 ---
 
 
 ## Loading and preprocessing the data
 
+```{r}
+# Package dependencies (uncomment and install if necessary)
+
+# install.packages("data.table")
+# install.packages("lubridate")
+library(data.table)
+library(lubridate)
+
+# set the working directory (replace path accordingly)
+setwd("/Users/adakemia/Documents/Academic/Coursera/DataScienceSpecialization/05ReproducibleResearch/Projects/RepData_PeerAssessment1")
+
+# List and check for necessary files
+url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+zfile <- "activity.zip"
+file <- "activity.csv"
+
+if (!file.exists(file)) {
+        if (!file.exists(zfile)) {
+                method <- switch(Sys.info()[['sysname']],
+                                 "Windows" = "internal",
+                                 "Darwin" = "curl",
+                                 "Linux" = "wget",
+                                 "auto")
+                download.file(url, destfile=zfile, method)
+                }
+        unzip(zfile, exdir="./")
+}
+
+# Read files into data.table object
+data <- fread(file, sep=",", stringsAsFactors=F, header=T, 
+              na.strings="NA", colClasses=c("numeric","character","character"))
+# Check structure of data
+str(data)
+
+# Process data
+
+# Set date formatting (lubridate package)
+data[,date := ymd(date)]
+
+# Data quality checks
+
+# Check for missingness
+colSums(is.na(data))
+# Percent missing
+sum(is.na(data$steps)) / nrow(data) * 100
+
+# Check timeseries
+data[,unique(date)]
+plot(data$interval[11:14], type="l")
+data[11:14]
+
+# Fix hour/min anomaly
 
 
-## What is mean total number of steps taken per day?
+```
 
 
+## What is mean total number of steps taken per day?  
+First, we can take a wide view via a histogram. We can see several things from the histogram:  
+* The shape is relatively normal  
+* Due to normality, we would expect mean and median to be fairly close  
+* We would expect the mean and median to fall roughly just over 10,000 steps  
+---
+
+```{r}
+hist(data[,sum(steps), by=date]$V1, breaks=8, 
+     main="Histogram of Mean Steps Per Day",
+     xlab="mean steps per day")
+```
+  
+Next, we can compare to the actual mean and median for the entire period. As expected, the mean and median are very close and just over 10,000 steps.  
+
+
+```{r}
+data[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
+                                        mean = mean(sum, na.rm=T))]
+```
 
 ## What is the average daily activity pattern?
 
+```{r}
+ts <- data[, .(mean = round( mean(steps, na.rm=T), 2)), by=interval]
 
+plot(ts$mean ~ ts$interval, type="l", main="Mean Steps Per Daily Interval",
+     xlab="interval", ylab="mean steps")
 
+ts[which.max(mean)]
+
+```
 ## Imputing missing values
 
+```{r}
+# create a second imputed data set
+data_imp <- data
 
+ts2 <- data_imp[, .(median = median(steps, na.rm=T),
+                    mean = mean(steps, na.rm=T)), 
+                by=interval]
+# Compare mean and median by interval 
+plot(ts2$mean ~ ts2$interval, type="l", main="Mean Steps Per Daily Interval",
+     xlab="interval", ylab="mean steps")
+lines(ts2$median ~ ts2$interval, col="red")
+
+data[interval == 1000]
+data_imp[, .(median = median(steps, na.rm=T),
+                    mean = mean(steps, na.rm=T)), 
+                by=list(interval, wday(date))][interval==900]
+ts2[interval == 900]
+data[interval == 900]
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?

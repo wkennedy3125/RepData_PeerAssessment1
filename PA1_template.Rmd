@@ -1,6 +1,6 @@
 ---
 title: 'Reproducible Research: Peer Assessment 1'
-author: William L. Kennedy
+author: "William L. Kennedy"
 output:
   html_document:
     keep_md: yes
@@ -56,24 +56,16 @@ colSums(is.na(data))
 # Percent missing
 sum(is.na(data$steps)) / nrow(data) * 100
 
-# Check timeseries
-data[,unique(date)]
-plot(data$interval[11:14], type="l")
-data[11:14]
-
-# Fix hour/min anomaly
-
-
 ```
 
 
 ## What is mean total number of steps taken per day?  
-First, we can take a wide view via a histogram. We can see several things from the histogram:  
-* The shape is relatively normal  
-* Due to normality, we would expect mean and median to be fairly close  
-* We would expect the mean and median to fall roughly just over 10,000 steps  
+First, we can take a quick view of the data via a histogram. We can see several things from the histogram:  
+  
+1. The shape is relatively normal  
+2. Due to normality, we would expect mean and median to be fairly close  
+3. We would expect the mean and median to fall roughly just over 10,000 steps  
 
----
 
 ```{r}
 hist(data[,sum(steps), by=date]$V1, breaks=8, 
@@ -89,7 +81,9 @@ data[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
                                         mean = mean(sum, na.rm=T))]
 ```
 
-## What is the average daily activity pattern?
+## What is the average daily activity pattern?  
+  
+So what does a typical day look like for this individual? First, we can create a time series based on the mean for each time interval across all days.   
 
 ```{r}
 ts <- data[, .(mean = round( mean(steps, na.rm=T), 2)), by=interval]

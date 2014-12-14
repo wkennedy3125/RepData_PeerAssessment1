@@ -102,59 +102,14 @@ sum(is.na(data$steps)) / nrow(data) * 100
 ## [1] 13.11475
 ```
 
-```r
-# Check timeseries
-data[,unique(date)]
-```
-
-```
-##  [1] "2012-10-01 UTC" "2012-10-02 UTC" "2012-10-03 UTC" "2012-10-04 UTC"
-##  [5] "2012-10-05 UTC" "2012-10-06 UTC" "2012-10-07 UTC" "2012-10-08 UTC"
-##  [9] "2012-10-09 UTC" "2012-10-10 UTC" "2012-10-11 UTC" "2012-10-12 UTC"
-## [13] "2012-10-13 UTC" "2012-10-14 UTC" "2012-10-15 UTC" "2012-10-16 UTC"
-## [17] "2012-10-17 UTC" "2012-10-18 UTC" "2012-10-19 UTC" "2012-10-20 UTC"
-## [21] "2012-10-21 UTC" "2012-10-22 UTC" "2012-10-23 UTC" "2012-10-24 UTC"
-## [25] "2012-10-25 UTC" "2012-10-26 UTC" "2012-10-27 UTC" "2012-10-28 UTC"
-## [29] "2012-10-29 UTC" "2012-10-30 UTC" "2012-10-31 UTC" "2012-11-01 UTC"
-## [33] "2012-11-02 UTC" "2012-11-03 UTC" "2012-11-04 UTC" "2012-11-05 UTC"
-## [37] "2012-11-06 UTC" "2012-11-07 UTC" "2012-11-08 UTC" "2012-11-09 UTC"
-## [41] "2012-11-10 UTC" "2012-11-11 UTC" "2012-11-12 UTC" "2012-11-13 UTC"
-## [45] "2012-11-14 UTC" "2012-11-15 UTC" "2012-11-16 UTC" "2012-11-17 UTC"
-## [49] "2012-11-18 UTC" "2012-11-19 UTC" "2012-11-20 UTC" "2012-11-21 UTC"
-## [53] "2012-11-22 UTC" "2012-11-23 UTC" "2012-11-24 UTC" "2012-11-25 UTC"
-## [57] "2012-11-26 UTC" "2012-11-27 UTC" "2012-11-28 UTC" "2012-11-29 UTC"
-## [61] "2012-11-30 UTC"
-```
-
-```r
-plot(data$interval[11:14], type="l")
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-1-1.png) 
-
-```r
-data[11:14]
-```
-
-```
-##    steps       date interval
-## 1:    NA 2012-10-01       50
-## 2:    NA 2012-10-01       55
-## 3:    NA 2012-10-01      100
-## 4:    NA 2012-10-01      105
-```
-
-```r
-# Fix hour/min anomaly
-```
-
 
 ## What is mean total number of steps taken per day?  
-First, we can take a wide view via a histogram. We can see several things from the histogram:  
-* The shape is relatively normal  
-* Due to normality, we would expect mean and median to be fairly close  
-* We would expect the mean and median to fall roughly just over 10,000 steps  
----
+First, we can take a quick view of the data via a histogram. We can see several things from the histogram:  
+  
+1. The shape is relatively normal  
+2. Due to normality, we would expect mean and median to be fairly close  
+3. We would expect the mean and median to fall roughly just over 10,000 steps  
+
 
 
 ```r
@@ -179,7 +134,9 @@ data[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
 ## 1:  10765 10766.19
 ```
 
-## What is the average daily activity pattern?
+## What is the average daily activity pattern?  
+  
+So what does a typical day look like for this individual? First, we can create a time series based on the mean for each time interval across all days.   
 
 
 ```r

@@ -1,6 +1,9 @@
 # Reproducible Research: Peer Assessment 1
 William L. Kennedy  
 
+## Abstract  
+  
+This is a short report of data from a personal activity monitor collecting 5-minute interval data on the number of steps taken in a day. The data is two months worth from October and November 2012. Mean steps taken per day were 10,766 and the maximum 5-minute interval average suggested 206 steps at 8:35 a.m. 
 
 ## Loading and preprocessing the data
 
@@ -178,9 +181,32 @@ ts[which.max(mean)]
 ## Imputing missing values  
   
 Imputing missing values is a tricky but important task. Using listwise deletion is known to be more biased than other methods (add citation). On the other hand, more complex methods will be less biased than replacing with means or medians. For this exercise, the task seems to be an exercise in looking at and thinking about the data and less about using tools for missing data. Based on this thinking, and based on the output below, it seemed using the median might be best. After trying each though, the mean may be the less biased choice. I need to look into this further. So in the end, I am using the mean to impute the missing values. Both are shown below.  
+  
+  
+Number missing:  
+  
 
+```r
+# Check for missingness
+colSums(is.na(data))
+```
 
+```
+##    steps     date interval 
+##     2304        0        0
+```
+  
+Percent missing:  
+  
 
+```r
+# Percent missing
+sum(is.na(data$steps)) / nrow(data) * 100
+```
+
+```
+## [1] 13.11475
+```
 
 ```r
 # Compare mean and median by interval 
@@ -194,7 +220,7 @@ lines(ts2$median ~ ts2$interval, col="red")
 legend("topright",legend=c("mean","median"),lty=1, col=c("black", "red"))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
 
 ```r
 # Where median shows zero, "random"" sample of percentage of zero days
@@ -292,7 +318,7 @@ hist(data_imp[,sum(steps), by=date]$V1, breaks=8,
      xlab="mean steps per day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-5-2.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-6-2.png) 
 
 ```r
 data_imp[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
@@ -331,7 +357,7 @@ hist(data_imp_mean[,sum(steps), by=date]$V1, breaks=8,
      xlab="mean steps per day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-5-3.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-6-3.png) 
 
 ```r
 data_imp_mean[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
@@ -399,7 +425,7 @@ xyplot(data=ts_imp_mean,
        layout=c(1,2))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
 
 
 

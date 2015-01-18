@@ -21,27 +21,7 @@ This is a short report of data from a personal activity monitor collecting 5-min
 # install.packages("lubridate")
 # install.packages("lattice")
 library(data.table)
-```
-
-```
-## data.table 1.9.4  For help type: ?data.table
-## *** NB: by=.EACHI is now explicit. See README to restore previous behaviour.
-```
-
-```r
 library(lubridate)
-```
-
-```
-## 
-## Attaching package: 'lubridate'
-## 
-## The following objects are masked from 'package:data.table':
-## 
-##     hour, mday, month, quarter, wday, week, yday, year
-```
-
-```r
 library(lattice)
 
 # set the working directory (replace path accordingly)
@@ -143,7 +123,7 @@ First, we can take a quick view of the data via a histogram. We can see several 
 
 ```r
 hist(data[,sum(steps), by=date]$V1, breaks=8, 
-     main="Histogram of Mean Steps Per Day",
+     main="Histogram of Total Steps Per Day",
      xlab="mean steps per day")
 ```
 
@@ -194,7 +174,7 @@ ts[which.max(mean)]
 ```
 ## Imputing missing values  
   
-Imputing missing values is a tricky but important task. Using listwise deletion is known to be more biased than other methods (add citation). On the other hand, more complex methods will be less biased than replacing with means or medians. For this exercise, the task seems to be an exercise in looking at and thinking about the data and less about using tools for missing data. Based on this thinking, and based on the output below, it seemed using the median might be best. After trying each though, the mean may be the less biased choice. I need to look into this further. So in the end, I am using the mean to impute the missing values. Both are shown below.  
+Imputing missing values is a tricky but important task. Using listwise deletion is known to be more biased than other methods. On the other hand, more complex methods will be less biased than replacing with means or medians. For this exercise, the task seems to be an exercise in looking at and thinking about the data and less about using tools for missing data. Based on this thinking, and based on the output below, it at first seemed using the median might be best. After trying each though, the mean may be the less biased choice. I need to look into this further. So in the end, I am using the mean to impute the missing values. Both are shown below.  
   
   
 Number missing:  
@@ -328,7 +308,7 @@ data_imp[is.na(steps),steps := median]
 
 ```r
 hist(data_imp[,sum(steps), by=date]$V1, breaks=8, 
-     main="Histogram of Mean Steps Per Day",
+     main="Histogram of Total Steps Per Day",
      xlab="mean steps per day")
 ```
 
@@ -367,7 +347,7 @@ data_imp_mean[is.na(steps),steps := mean]
 
 ```r
 hist(data_imp_mean[,sum(steps), by=date]$V1, breaks=8, 
-     main="Histogram of Mean Steps Per Day",
+     main="Histogram of Total Steps Per Day",
      xlab="mean steps per day")
 ```
 

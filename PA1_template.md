@@ -1,5 +1,11 @@
-# Reproducible Research: Peer Assessment 1
-William L. Kennedy  
+---
+title: 'Reproducible Research: Peer Assessment 1'
+author: "William L. Kennedy"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
 
 ## Abstract  
   
@@ -15,6 +21,14 @@ This is a short report of data from a personal activity monitor collecting 5-min
 # install.packages("lubridate")
 # install.packages("lattice")
 library(data.table)
+```
+
+```
+## data.table 1.9.4  For help type: ?data.table
+## *** NB: by=.EACHI is now explicit. See README to restore previous behaviour.
+```
+
+```r
 library(lubridate)
 ```
 
@@ -133,7 +147,7 @@ hist(data[,sum(steps), by=date]$V1, breaks=8,
      xlab="mean steps per day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-1-1.png) 
+![plot of chunk unnamed-chunk-1](figure/unnamed-chunk-1-1.png) 
   
 Next, we can compare to the actual mean and median for the entire period. As expected, the mean and median are very close and just over 10,000 steps.  
 
@@ -164,7 +178,7 @@ plot(ts$mean ~ ts$interval, type="l", main="Mean Steps Per Daily Interval",
      xlab="interval (0 [12 am] - 2355 [11:55 pm])", ylab="mean steps")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
   
 Now we can look at specific descriptives like the interval with the average maximum number of steps. As expected from the time series plot, it is 8:35 am.  
 
@@ -220,7 +234,7 @@ lines(ts2$median ~ ts2$interval, col="red")
 legend("topright",legend=c("mean","median"),lty=1, col=c("black", "red"))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
 
 ```r
 # Where median shows zero, "random"" sample of percentage of zero days
@@ -318,7 +332,7 @@ hist(data_imp[,sum(steps), by=date]$V1, breaks=8,
      xlab="mean steps per day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-2.png) 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-2.png) 
 
 ```r
 data_imp[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
@@ -357,7 +371,7 @@ hist(data_imp_mean[,sum(steps), by=date]$V1, breaks=8,
      xlab="mean steps per day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-3.png) 
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-3.png) 
 
 ```r
 data_imp_mean[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
@@ -425,7 +439,7 @@ xyplot(data=ts_imp_mean,
        layout=c(1,2))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
 
 
 

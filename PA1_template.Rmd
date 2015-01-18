@@ -2,9 +2,9 @@
 title: 'Reproducible Research: Peer Assessment 1'
 author: "William L. Kennedy"
 output:
+  pdf_document: default
   html_document:
     keep_md: yes
-  pdf_document: default
 ---
 
 ## Abstract  

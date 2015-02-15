@@ -7,25 +7,43 @@ output:
   pdf_document: default
 ---
 
-## Abstract  
+### Abstract  
   
-This is a short report of data from a personal activity monitor collecting 5-minute interval data on the number of steps taken in a day. The data is two months worth from October and November 2012. Mean steps taken per day were 10,766 and the maximum 5-minute interval average suggested 206 steps at 8:35 a.m. 
-
-## Loading and preprocessing the data
+This is a short report of data from a personal activity monitor collecting 5-minute interval data on the number of steps taken in a day. The data is two months worth from October and November 2012. Mean steps taken per day were 10,766 and the maximum 5-minute interval average suggested 206 steps at 8:35 a.m. Differences between weekday and weekend activity patterns are suggested by the data.  
+  
+### Loading and preprocessing the data
 
 
 ```r
-# Package dependencies (uncomment and install if necessary)
-
-# install.packages("data.table")
-# install.packages("lubridate")
-# install.packages("lattice")
+if(!"data.table" %in% installed.packages())install.packages("data.table")
+if(!"lubridate" %in% installed.packages())install.packages("lubridate")
+if(!"lattice" %in% installed.packages())install.packages("lattice")
 library(data.table)
+```
+
+```
+## data.table 1.9.4  For help type: ?data.table
+## *** NB: by=.EACHI is now explicit. See README to restore previous behaviour.
+```
+
+```r
 library(lubridate)
+```
+
+```
+## 
+## Attaching package: 'lubridate'
+## 
+## The following objects are masked from 'package:data.table':
+## 
+##     hour, mday, month, quarter, wday, week, yday, year
+```
+
+```r
 library(lattice)
 
 # set the working directory (replace path accordingly)
-setwd("/Users/adakemia/Documents/Academic/Coursera/DataScienceSpecialization/05ReproducibleResearch/Projects/RepData_PeerAssessment1")
+setwd("~/Documents/Academic/Coursera/DataScienceSpecialization/05ReproducibleResearch/Projects/RepData_PeerAssessment1")
 
 # List and check for necessary files
 url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
@@ -80,39 +98,9 @@ data[,date := ymd(date)]
 ## 17567:    NA 2012-11-30     2350
 ## 17568:    NA 2012-11-30     2355
 ```
+  
 
-```r
-# Data quality checks
-
-
-# Check for missingness
-colSums(is.na(data))
-```
-
-```
-##    steps     date interval 
-##     2304        0        0
-```
-
-```r
-# Percent missing
-sum(is.na(data$steps)) / nrow(data) * 100
-```
-
-```
-## [1] 13.11475
-```
-
-```r
-# after trying several fixes to the skip in the interval time entry
-# I decided to leave it. I don't see a noticeable difference in output
-# and several methods introduced anomalies I couldn't fix in the time 
-# alotted. Given more time I would convert to a timeseries object (e.g.,
-# ts, zoo, TimeSeries, etc. for more complete analyses) 
-```
-
-
-## What is mean total number of steps taken per day?  
+### What is mean total number of steps taken per day?  
 First, we can take a quick view of the data via a histogram. We can see several things from the histogram:  
   
 1. The shape is relatively normal  
@@ -122,9 +110,9 @@ First, we can take a quick view of the data via a histogram. We can see several 
 
 
 ```r
-hist(data[,sum(steps), by=date]$V1, breaks=8, 
+hist(data[,sum(steps), by=date]$V1, breaks=10, 
      main="Histogram of Total Steps Per Day",
-     xlab="mean steps per day")
+     xlab="steps per day")
 ```
 
 ![plot of chunk unnamed-chunk-1](figure/unnamed-chunk-1-1.png) 
@@ -143,7 +131,7 @@ data[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
 ## 1:  10765 10766.19
 ```
 
-## What is the average daily activity pattern?  
+### What is the average daily activity pattern?  
   
 So what does a typical day look like for this individual? First, we can create a time series based on the mean for each time interval across all days. By plotting this timeseries, we can see qualitatively what a typical day looks like.   
 
@@ -172,9 +160,9 @@ ts[which.max(mean)]
 ##    interval   mean
 ## 1:      835 206.17
 ```
-## Imputing missing values  
+### Imputing missing values  
   
-Imputing missing values is a tricky but important task. Using listwise deletion is known to be more biased than other methods. On the other hand, more complex methods will be less biased than replacing with means or medians. For this exercise, the task seems to be an exercise in looking at and thinking about the data and less about using tools for missing data. Based on this thinking, and based on the output below, it at first seemed using the median might be best. After trying each though, the mean may be the less biased choice. I need to look into this further. So in the end, I am using the mean to impute the missing values. Both are shown below.  
+Imputing missing values is a tricky but important task. Using listwise deletion is known to be more biased than other methods. On the other hand, more complex methods will be less biased than replacing with means or medians. For this exercise, I am using the mean to impute the missing values, but, first, I compared both mean and medium values below.  
   
   
 Number missing:  
@@ -195,12 +183,19 @@ Percent missing:
 
 ```r
 # Percent missing
-sum(is.na(data$steps)) / nrow(data) * 100
+round(sum(is.na(data$steps)) / nrow(data) * 100, 2)
 ```
 
 ```
-## [1] 13.11475
+## [1] 13.11
 ```
+  
+This is high enough percentage to expect a change after imputing.
+  
+  
+Now I will visually compare mean and median by interval to see the difference.
+  
+  
 
 ```r
 # Compare mean and median by interval 
@@ -214,79 +209,12 @@ lines(ts2$median ~ ts2$interval, col="red")
 legend("topright",legend=c("mean","median"),lty=1, col=c("black", "red"))
 ```
 
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
+  
+Here I will impute with median just to compare with mean later.
+  
 
 ```r
-# Where median shows zero, "random"" sample of percentage of zero days
-nrow(data[interval == 1000][steps == 0])/nrow(data[!is.na(steps) & interval == 1000])
-```
-
-```
-## [1] 0.7735849
-```
-
-```r
-nrow(data[interval == 1500][steps == 0])/nrow(data[!is.na(steps) & interval == 1500])
-```
-
-```
-## [1] 0.7735849
-```
-
-```r
-nrow(data[interval == 2000][steps == 0])/nrow(data[!is.na(steps) & interval == 2000])
-```
-
-```
-## [1] 0.7169811
-```
-
-```r
-# Compare interval by weekday
-data[, .(median = median(steps, na.rm=T),
-                    mean = mean(steps, na.rm=T)), 
-                by=list(interval, wday(date))][interval==900]
-```
-
-```
-##    interval wday median      mean
-## 1:      900    2     71 249.85714
-## 2:      900    3     36 134.00000
-## 3:      900    4     14 137.50000
-## 4:      900    5      0 137.75000
-## 5:      900    6     16 218.14286
-## 6:      900    7     20 112.14286
-## 7:      900    1     15  19.14286
-```
-
-```r
-ts2[interval == 900]
-```
-
-```
-##    interval median     mean
-## 1:      900     20 143.4528
-```
-
-```r
-nrow(data[interval == 900][steps == 0])/nrow(data[!is.na(steps) & interval == 900])
-```
-
-```
-## [1] 0.3773585
-```
-
-```r
-# Based on numbers, median might be safer/less biased than mean (but ideally
-# would check)
-# (of course MI or FIML would be best)
-# Could consider making exceptions for days where percentage of zeroes 
-# is significantly lower than 50%, etc. but not this time....
-
-
-#setkey(ts2, interval)
-#setkey(data, interval)
-
 data_imp <- merge(data, ts2, by="interval", all=T)
 data_imp[is.na(steps),steps := median]
 ```
@@ -307,14 +235,6 @@ data_imp[is.na(steps),steps := median]
 ```
 
 ```r
-hist(data_imp[,sum(steps), by=date]$V1, breaks=8, 
-     main="Histogram of Total Steps Per Day",
-     xlab="mean steps per day")
-```
-
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-2.png) 
-
-```r
 data_imp[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
                                         mean = mean(sum, na.rm=T))]
 ```
@@ -323,9 +243,16 @@ data_imp[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
 ##    median     mean
 ## 1:  10395 9503.869
 ```
+  
+With the smaller values of median inserted, the mean seems to be drawn down significantly. 
+  
+  
+Now I'll try imputing with mean.  
+  
+  
+
 
 ```r
-# Looks a little "funny", not sure this is OK. Let's try mean.
 data_imp_mean <- merge(data, ts2, by="interval", all=T)
 data_imp_mean[is.na(steps),steps := mean]
 ```
@@ -348,10 +275,10 @@ data_imp_mean[is.na(steps),steps := mean]
 ```r
 hist(data_imp_mean[,sum(steps), by=date]$V1, breaks=8, 
      main="Histogram of Total Steps Per Day",
-     xlab="mean steps per day")
+     xlab="steps per day")
 ```
 
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-3.png) 
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png) 
 
 ```r
 data_imp_mean[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
@@ -362,17 +289,12 @@ data_imp_mean[, .(sum = sum(steps)), by=date][,.(median = median(sum, na.rm=T),
 ##      median     mean
 ## 1: 10766.19 10766.19
 ```
-
-```r
-data_imp_mean[which.max(interval)]
-```
-
-```
-##    interval    steps       date median     mean
-## 1:     2355 1.075472 2012-10-01      0 1.075472
-```
-
-## Are there differences in activity patterns between weekdays and weekends?  
+  
+  
+Using the mean seems to result in a more normal distribution suggested by the equality between mean and median.  
+  
+  
+### Are there differences in activity patterns between weekdays and weekends?  
   
 Differences between weekday and weekend activity as shown in the plot below include a slower rise in activity on weekend mornings, as well as higher activity variability throughout the day and evening.  
 
@@ -419,7 +341,7 @@ xyplot(data=ts_imp_mean,
        layout=c(1,2))
 ```
 
-![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
 
 
 
